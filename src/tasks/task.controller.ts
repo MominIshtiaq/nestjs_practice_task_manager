@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,6 +16,7 @@ import type { TaskModel } from './task.model';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 
 @Controller('tasks')
 export class TaskController {
@@ -39,12 +42,16 @@ export class TaskController {
     return this.taskService.updateTask(id, updateTaskDto);
   }
 
-  @Patch(':id')
-  semiUpdateTask(@Param(':id') id: UUID, updateTaskDto: UpdateTaskDto) {
-    return this.taskService.semiUpdateTask(id, updateTaskDto);
+  @Patch('/:id/status')
+  updateTaskStatus(
+    @Param('id') id: UUID,
+    @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+  ) {
+    return this.taskService.updateTaskStatus(id, updateTaskStatusDto.status);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   deleteTask(@Param('id') id: UUID): TaskModel {
     return this.taskService.deleteTask(id);
   }

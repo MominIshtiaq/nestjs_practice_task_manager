@@ -40,29 +40,18 @@ export class TaskService {
 
     this.tasks[taskIndex] = {
       id,
-      title: title as string,
-      description: description as string,
-      status: status as TaskStatus,
+      title,
+      description,
+      status,
     };
 
     return this.tasks[taskIndex];
   }
 
-  semiUpdateTask(id: UUID, updateTaskDto: UpdateTaskDto): TaskModel {
-    const taskIndex = this.tasks.findIndex((task) => task.id === id);
-    if (taskIndex === -1) throw new NotFoundException();
-
-    if (updateTaskDto.title !== undefined) {
-      this.tasks[taskIndex].title = updateTaskDto.title;
-    }
-    if (updateTaskDto.description !== undefined) {
-      this.tasks[taskIndex].description = updateTaskDto.description;
-    }
-    if (updateTaskDto.status !== undefined) {
-      this.tasks[taskIndex].status = updateTaskDto.status;
-    }
-
-    return this.tasks[taskIndex];
+  updateTaskStatus(id: UUID, status: TaskStatus) {
+    const task = this.getTaskById(id);
+    task.status = status;
+    return task;
   }
 
   deleteTask(id: UUID): TaskModel {
