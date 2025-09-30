@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { TaskStatus } from '../task.model';
 
 export class TaskFilterDto {
+  @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
+  @IsOptional()
   @IsNotEmpty()
   search?: string;
 }

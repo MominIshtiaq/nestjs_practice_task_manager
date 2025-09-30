@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { TaskService } from './task.service';
@@ -17,14 +18,19 @@ import type { TaskModel } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { TaskFilterDto } from './dto/task-filter.dto';
 
 @Controller('tasks')
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
   @Get()
-  getAllTasks(): TaskModel[] {
-    return this.taskService.getAllTasks();
+  getAllTasks(@Query() taskFilterDto: TaskFilterDto): TaskModel[] {
+    if (taskFilterDto) {
+      return this.taskService.getFilteredTasks(taskFilterDto);
+    } else {
+      return this.taskService.getTasks();
+    }
   }
 
   @Get(':id')

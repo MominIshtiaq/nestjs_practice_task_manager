@@ -4,12 +4,39 @@ import { randomUUID, type UUID } from 'crypto';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskFilterDto } from './dto/task-filter.dto';
 
 @Injectable()
 export class TaskService {
   private tasks: TaskModel[] = [];
 
-  getAllTasks(): TaskModel[] {
+  getFilteredTasks(filterTaskDto: TaskFilterDto): TaskModel[] {
+    const { search, status } = filterTaskDto;
+    let tasks = this.tasks; // temperaryly holds all the tasks
+
+    if (status) {
+      // filter task for status
+      tasks = tasks.filter((task) => task.status === status);
+    }
+
+    if (search) {
+      // filter task based on search
+      tasks = tasks.filter((task) => {
+        if (
+          task.title.toLowerCase().includes(search.toLowerCase()) ||
+          task.description.toLowerCase().includes(search.toLowerCase())
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+    }
+
+    return tasks;
+  }
+
+  getTasks(): TaskModel[] {
     return this.tasks;
   }
 
