@@ -1,23 +1,95 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from './task-status.enum';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-// import { TaskFilterDto } from './dto/task-filter.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { TaskFilterDto } from './dto/task-filter.dto';
 import { Task } from './task.entity';
-import { Repository } from 'typeorm';
+import { ILike } from 'typeorm';
+import { Raw } from 'typeorm';
+import { TasksRepository } from './task.repository';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TaskService {
   constructor(
     @InjectRepository(Task)
-    private tasksRepository: Repository<Task>,
+    private tasksRepository: TasksRepository,
   ) {}
 
   async getTasks(): Promise<Task[]> {
     const tasks = await this.tasksRepository.find();
     return tasks;
+  }
+
+  // using QueryBuilder
+  // Best if you need complex filtering, multiple OR conditions, joins, etc.
+  async getFilterTasks(taskFilterDto: TaskFilterDto): Promise<Task[]> {
+    const { status, search } = taskFilterDto;
+    const query = this.tasksRepository.createQueryBuilder('task');
+
+    if (status) {
+      query.andWhere('task.status = :status', { status });
+    }
+
+    if (search) {
+      query.andWhere(
+        '(LOWER(task.title) LIKE LOWER(:search) OR LOWER(task.description) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    const tasks = await query.getMany();
+    return tasks;
+  }
+
+  // using ILike from typeORM
+  // Simpler than QueryBuilder.
+  // But combining multiple fields (title OR description) requires an array of where objects.
+  async getFilterTasks02(taskFilterDto: TaskFilterDto): Promise<Task[]> {
+    const { status, search } = taskFilterDto;
+
+    const where: any = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (search) {
+      // For single field
+      where.title = ILike(`%${search}%`);
+      // OR for multiple fields, you can use an array of conditions
+      return this.tasksRepository.find({
+        where: [
+          { ...where, title: ILike(`%${search}%`) },
+          { ...where, description: ILike(`%${search}%`) },
+        ],
+      });
+    }
+
+    return this.tasksRepository.find({ where });
+  }
+
+  // using Raw from typeORM
+  // More flexible than ILike.
+  // Still trickier for OR conditions across multiple fields.
+  async getFilterTasks03(taskFilterDto: TaskFilterDto): Promise<Task[]> {
+    const { status, search } = taskFilterDto;
+
+    const where: any = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (search) {
+      where.title = Raw((alias) => `${alias} ILIKE '%${search}%'`);
+      // You can also combine multiple Raw conditions
+    }
+
+    return this.tasksRepository.find({ where });
   }
 
   async getTasksById(id: string): Promise<Task> {
@@ -32,6 +104,17 @@ export class TaskService {
 
   async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
     const { title, description } = createTaskDto;
+    const task = this.tasksRepository.create({
+      title,
+      description,
+      status: TaskStatus.OPEN,
+    });
+    await this.tasksRepository.save(task);
+    return task;
+  }
+
+  async createTask02(createTaskDto: CreateTaskDto): Promise<Task> {
+    const { title, description } = createTaskDto;
     const task = {
       title,
       description,
@@ -39,6 +122,10 @@ export class TaskService {
     };
     const createTask = await this.tasksRepository.save(task);
     return createTask;
+  }
+
+  async createTask03(createTaskDto: CreateTaskDto): Promise<Task> {
+    return this.tasksRepository.createTask(createTaskDto);
   }
 
   async updateTaskStatus(id: string, status: TaskStatus) {

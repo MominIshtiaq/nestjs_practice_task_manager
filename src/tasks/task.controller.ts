@@ -9,7 +9,7 @@ import {
   Patch,
   Post,
   Put,
-  // Query,
+  Query,
 } from '@nestjs/common';
 
 import { TaskService } from './task.service';
@@ -17,24 +17,19 @@ import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
-// import { TaskFilterDto } from './dto/task-filter.dto';
+import { TaskFilterDto } from './dto/task-filter.dto';
 
 @Controller('tasks')
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
-  // @Get()
-  // getAllTasks(@Query() taskFilterDto: TaskFilterDto): TaskModel[] {
-  //   if (taskFilterDto) {
-  //     return this.taskService.getFilteredTasks(taskFilterDto);
-  //   } else {
-  //     return this.taskService.getTasks();
-  //   }
-  // }
-
   @Get()
-  getTasks() {
-    return this.taskService.getTasks();
+  getTasks(@Query() taskFilterDto: TaskFilterDto) {
+    if (taskFilterDto) {
+      return this.taskService.getFilterTasks(taskFilterDto);
+    } else {
+      return this.taskService.getTasks();
+    }
   }
 
   @Get(':id')
