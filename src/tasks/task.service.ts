@@ -7,16 +7,14 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskFilterDto } from './dto/task-filter.dto';
 import { Task } from './task.entity';
-import { ILike } from 'typeorm';
-import { Raw } from 'typeorm';
-import { TasksRepository } from './task.repository';
+import { ILike, Raw, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TaskService {
   constructor(
     @InjectRepository(Task)
-    private tasksRepository: TasksRepository,
+    private tasksRepository: Repository<Task>,
   ) {}
 
   async getTasks(): Promise<Task[]> {
@@ -122,10 +120,6 @@ export class TaskService {
     };
     const createTask = await this.tasksRepository.save(task);
     return createTask;
-  }
-
-  async createTask03(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksRepository.createTask(createTaskDto);
   }
 
   async updateTaskStatus(id: string, status: TaskStatus) {
