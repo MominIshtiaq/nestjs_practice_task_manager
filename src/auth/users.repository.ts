@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserRepository extends Repository<User> {
   constructor(private dataSource: DataSource) {
@@ -15,14 +15,17 @@ export class UserRepository extends Repository<User> {
 
   async createUser(createUserDto: CreateUserDto): Promise<void> {
     const { username, password } = createUserDto;
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const user = this.create({
       username,
-      password,
+      password: hashedPassword,
     });
     try {
       await this.save(user);
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (error.code === '23505') {
         // dulipcate username
         throw new ConflictException('Username already exists');
