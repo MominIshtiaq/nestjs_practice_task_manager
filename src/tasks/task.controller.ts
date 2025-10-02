@@ -34,8 +34,8 @@ export class TaskController {
   }
 
   @Get(':id')
-  getTaskById(@Param('id') id: string) {
-    return this.taskService.getTasksById(id);
+  getTaskById(@Param('id') id: string, @GetUser() user: User) {
+    return this.taskService.getTasksById(id, user);
   }
 
   @Post()
@@ -65,8 +65,13 @@ export class TaskController {
   TaskStatusUpdate(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+    @GetUser() user: User,
   ) {
-    return this.taskService.taskStatusUpdate(id, updateTaskStatusDto.status);
+    return this.taskService.taskStatusUpdate(
+      id,
+      updateTaskStatusDto.status,
+      user,
+    );
   }
 
   @Delete(':id')
@@ -76,13 +81,13 @@ export class TaskController {
   }
 
   @Delete('/:id/delete')
-  taskDelete(@Param('id') id: string) {
-    return this.taskService.taskDelete(id);
+  taskDelete(@Param('id') id: string, @GetUser() user: User) {
+    return this.taskService.taskDelete(id, user);
   }
 
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteAllTask() {
-    return this.taskService.deleteAllTasks();
+  deleteAllTask(@GetUser() user: User) {
+    return this.taskService.deleteAllTasks(user);
   }
 }
